@@ -1,0 +1,6 @@
+#SQL credentials
+
+USER = "<YOUR USER NAME>"
+PASSWORD = "<YOUR PASSWORD>"
+HOST = "<YOUR HOST>"
+DATABASE = "assignment_4_API"
