@@ -1,7 +1,7 @@
 from flask import Flask, jsonify, request
-from db_utils import get_all_books_db, get_book_by_title_db, get_book_by_author_db, \
+from db_utils import get_book_by_title_db, get_book_by_author_db, \
     get_book_by_genre_db, add_new_user_db, add_book_to_user_db, get_user_db, get_book_by_id_db, \
-    delete_user_by_id_db
+    delete_user_by_id_db, get_all_books_db, return_book_db
 
 app = Flask(__name__)
 
@@ -21,6 +21,7 @@ def get_by_title(title):
 
 # http://127.0.0.1:5001/books/<title>
 
+
 @app.route('/author/<author>')
 def get_by_author(author):
     res = get_book_by_author_db(author)
@@ -28,12 +29,14 @@ def get_by_author(author):
 
 # http://127.0.0.1:5001/author/<author>
 
+
 @app.route('/genre/<genre>')
 def get_by_genre(genre):
     res = get_book_by_genre_db(genre)
     return jsonify(res)
 
 # http://127.0.0.1:5001/genre/<genre>
+
 
 @app.route('/id/<book_id>')
 def get_by_id(book_id):
@@ -50,6 +53,7 @@ def new_user():
 
 # http://127.0.0.1:5001/user/add
 
+
 @app.route('/user/<user_name>')
 def get_user(user_name):
     res = get_user_db(user_name)
@@ -65,10 +69,19 @@ def add_book_to_user():
 
 # http://127.0.0.1:5001/user_book/add
 
+@app.route("/user_book/return", methods=["POST"])
+def return_book():
+    book_id = request.get_json()
+    return jsonify(return_book_db(book_id))
+
+# http://127.0.0.1:5001/user_book/return
+
+
 @app.route("/users/remove/<user_id>", methods=["DELETE"])
 def del_user_by_id(user_id):
     return jsonify(delete_user_by_id_db(user_id))
 
+# http://127.0.0.1:5001/users/remove/{user_id}
 
 
 

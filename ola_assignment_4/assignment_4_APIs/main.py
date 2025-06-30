@@ -75,6 +75,17 @@ def add_book_to_user_front_end(user_book_dict):
 
     return result.json()
 
+#return a book
+def book_return_endpoint(book_id):
+    endpoint = "http://127.0.0.1:5001/user_book/return"
+    result = requests.post(
+        endpoint,
+        headers={'content-type': 'application/json'},
+        data=json.dumps(book_id)
+    )
+
+    return result.json()
+
 def delete_user_by_id(user_id):
     endpoint = f"http://127.0.0.1:5001/users/remove/{user_id}"
     result = requests.delete(endpoint).json()
@@ -95,7 +106,6 @@ def collect_book_user_data(user_name):
 
     return user_book_dict
 
-
 def rent_book(user):
 
     user_name = user[0][1]
@@ -108,15 +118,20 @@ def rent_book(user):
 
     book_title = get_book_by_id(user_book)[0][1]
     book_author = get_book_by_id(user_book)[0][2]
+    book_availability = get_book_by_id(user_book)[0][7]
 
-    print("You have rented: ")
-    print(f"\x1B[3m{book_title}\x1B[0m by {book_author}.")
+    if book_availability > 0:
+        print("You have rented: ")
+        print(f"\x1B[3m{book_title}\x1B[0m by {book_author}.")
 
-    print("Thank you for using the library, Goodbye!")
+        return print("Thank you for using the library, Goodbye!")
+
+    else:
+        print("Sorry, this book is out of stock. Try another one.")
+        return main_menu(user)
 
 
 def check_book(user):
-
 
     user_book = user[0][2]
 
@@ -130,6 +145,8 @@ def check_book(user):
         return_choice = input("Would you like to return it and find a new one? (y/n): ").lower().strip()
 
         if return_choice == "y":
+            book_return_endpoint(user_book)
+            print("Thank you for returning the book, you may now choose a new one.")
             return browsing_menu(user)
 
         elif return_choice == "n":
@@ -143,64 +160,27 @@ def check_book(user):
         print("You don't currently have any books rented.")
         return browsing_menu(user)
 
-def book_display_route(book_route, book_info):
-    where = ""
-
-    if book_route == "title":
-        where = "title"
-
-
-    elif book_route == "author":
-        where = "author"
-
-    elif book_route == "genre":
-        where = "genre"
-
-    elif book_route == "id":
-        where = "id"
-
-    else:
-        where = ''
-
-    return display_book_table(where, book_info)
-
 def display_book_table(where, book_info):
 
+    book_table = []
     db_connection = _connect_to_db()
     cur = db_connection.cursor()
-    if where == "title":
+    if where != "all_books":
         cur.execute(f"""
-                SELECT  *
-                FROM books 
-                WHERE title = '{book_info}'
-                """)
+            SELECT  *
+             FROM books 
+            WHERE {where} = '{book_info}'
+            """)
         book_table = from_db_cursor(cur)
 
-    if where == "author":
+    elif where == "all_books":
         cur.execute(f"""
                 SELECT  *
-                FROM books 
-                WHERE author = '{book_info}'
-                """)
-        book_table = from_db_cursor(cur)
-
-    if where == "genre":
-        cur.execute(f"""
-                SELECT  *
-                FROM books 
-                WHERE genre = '{book_info}'
-                """)
-        book_table = from_db_cursor(cur)
-
-    if where == "all_books":
-        cur.execute(f"""
-                SELECT  *
-                FROM books 
+                FROM books
                 """)
         book_table = from_db_cursor(cur)
 
     return print(book_table)
-
 
 def main_menu(user):
 
@@ -245,10 +225,9 @@ def browsing_menu(user):
         title = input("Enter the title of the book: ")
 
         book = get_book_by_title(title)
-        book_title = book[0][1]
 
         if book:
-            print(book_display_route("title", book_title))
+            print(display_book_table("title", title))
 
             rent_choice = input("Would you like to rent this book out? (y/n): ")
 
@@ -267,7 +246,7 @@ def browsing_menu(user):
         book = get_book_by_genre(genre)
 
         if book:
-            print(book_display_route("genre", genre))
+            print(display_book_table("genre", genre))
 
             rent_choice = input("Would you like to rent one of these books out? (y/n): ")
 
@@ -290,7 +269,7 @@ def browsing_menu(user):
         book = get_book_by_author(author)
 
         if book:
-            print(book_display_route("author", author))
+            print(display_book_table("author", author))
 
             rent_choice = input("Would you like to rent one of these books out? (y/n): ")
 
@@ -315,7 +294,6 @@ def browsing_menu(user):
 
         else:
             return main_menu(user)
-
 
     else:
         print("Please select a valid option.")

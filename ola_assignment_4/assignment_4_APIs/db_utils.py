@@ -37,7 +37,6 @@ def get_all_books_db():
             db_connection.close()
             print("DB connection is closed")
 
-
 def get_user_db(user_name):
     db_connection = None
     try:
@@ -227,6 +226,14 @@ def add_book_to_user_db(user_book_dict):
 
         cur.execute(query)
 
+        query = f"""
+        UPDATE books
+        SET copies_available = copies_available -1
+        WHERE book_id = '{user_book_dict['rented_book']}'
+        """
+
+        cur.execute(query)
+
         db_connection.commit()
 
         print("book added successfully!")
@@ -245,7 +252,38 @@ def add_book_to_user_db(user_book_dict):
             db_connection.close()
             print("DB connection is closed")
 
+def return_book_db(book_id):
+    db_connection = None
+    try:
+        db_connection = _connect_to_db()
+        cur = db_connection.cursor()
+        print("Connected to DB: %s" % DATABASE)
+
+        query = f"""
+               UPDATE books
+               SET copies_available = copies_available +1
+               WHERE book_id = '{book_id}'
+               """
+
+        cur.execute(query)
+
+        result = cur.fetchall()
+        print(result)
+        cur.close()
+
+    except Exception:
+        raise DbConnectionError("Failed to read data from DB")
+
+    finally:
+        if db_connection:
+            db_connection.close()
+            print("DB connection is closed")
+
+    return result
+
+
 def delete_user_by_id_db(user_id):
+    db_connection = None
     try:
         db_connection = _connect_to_db()
         cur = db_connection.cursor()
